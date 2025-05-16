@@ -172,31 +172,7 @@ const Profile = () => {
                 required
               />
             </div>
-            
-            <h2 className="text-xl font-medium text-gray-900 mt-8 mb-6">Change Password</h2>
-            
-            <div className="space-y-4">
-              <Input
-                label="New Password"
-                name="password"
-                type="password"
-                value={profileData.password}
-                onChange={handleChange}
-                icon={<Key size={16} />}
-                error={errors.password}
-                placeholder="Leave blank to keep current password"
-              />
-              
-              <Input
-                label="Confirm New Password"
-                name="confirmPassword"
-                type="password"
-                value={profileData.confirmPassword}
-                onChange={handleChange}
-                error={errors.confirmPassword}
-                placeholder="Leave blank to keep current password"
-              />
-            </div>
+                     
             
             <div className="mt-8">
               <Button

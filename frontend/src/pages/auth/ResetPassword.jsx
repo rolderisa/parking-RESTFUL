@@ -8,7 +8,7 @@ const ResetPasswordPage = () => {
   const email = location.state?.email || '';
 
   const handleResetSuccess = () => {
-    navigate('/login');
+    navigate('/auth/login');
   };
 
   return (

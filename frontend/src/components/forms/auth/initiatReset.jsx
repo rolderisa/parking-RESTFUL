@@ -72,7 +72,7 @@ const InitiateResetForm = ({ onInitiateSuccess }) => {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-red-700 hover:bg-red-800 focus:ring-red-500"
+        className="w-full bg-[#111827] hover:bg-[#111827] focus:ring-[#111827]"
       >
         {isSubmitting ? 'Sending...' : 'Send Reset Email'}
       </Button>

@@ -164,14 +164,15 @@ export const initiateResetPassword = asyncHandler(async (req, res) => {
 // @desc    Reset password
 // @route   PUT /api/auth/reset-password
 // @access  Public
+
 export const resetPassword = asyncHandler(async (req, res) => {
-  const { code, newPassword } = req.body;
+  const { code, password } = req.body;  // <-- Expect 'password' from frontend
 
   const user = await prisma.user.findFirst({
     where: {
       passwordResetCode: code,
       passwordResetExpires: { gte: new Date() },
-    }
+    },
   });
 
   if (!user) {
@@ -180,7 +181,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   }
 
   const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(newPassword, salt);
+  const hashedPassword = await bcrypt.hash(password, salt);  // <-- Hash password here
 
   await prisma.user.update({
     where: { id: user.id },
@@ -188,7 +189,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
       password: hashedPassword,
       passwordResetCode: null,
       passwordResetExpires: null,
-    }
+    },
   });
 
   res.status(200).json({ message: "Password reset successfully" });

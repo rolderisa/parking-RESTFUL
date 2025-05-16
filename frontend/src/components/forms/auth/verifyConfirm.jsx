@@ -104,7 +104,7 @@ const VerifyConfirmForm = ({ email, onVerifySuccess }) => {
         ))}
       </div>
       <div className="w-full flex gap-4 justify-between items-center">
-        <Button type="submit" className="w-1/2 bg-red-700 hover:bg-red-800">
+        <Button type="submit" className="w-1/2 bg-[#111827] hover:bg-[#111827]">
           Verify Email
         </Button>
         <Button type="button" className="w-1/2" variant="outline" onClick={resendCode}>
