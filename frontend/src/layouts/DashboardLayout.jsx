@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { 
-  Menu, X, LogOut, User, Home, CalendarCheck, Plus, Car 
+import {
+  Menu, X, LogOut, User, Home, CalendarCheck, Plus, Car
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
@@ -10,29 +10,30 @@ const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Mobile sidebar backdrop */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
-        ></div>
+        />
       )}
-      
+
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white shadow-lg transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:z-auto ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white shadow-lg transition-transform duration-300 ease-in-out
+          lg:translate-x-0 lg:static lg:inset-auto lg:z-auto ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
-        <div className="flex flex-col h-full relative">
+        <div className="flex flex-col h-full">
           {/* Sidebar header */}
           <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200">
             <div className="flex items-center">
@@ -46,9 +47,9 @@ const DashboardLayout = () => {
               <X size={24} className="text-gray-600" />
             </button>
           </div>
-          
-          {/* Sidebar content */}
-          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto ">
+
+          {/* Sidebar nav links */}
+          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
             <NavLink
               to="/dashboard"
               className={({ isActive }) =>
@@ -58,7 +59,7 @@ const DashboardLayout = () => {
               <Home size={20} className="mr-3" />
               Dashboard
             </NavLink>
-            
+
             <NavLink
               to="/bookings"
               className={({ isActive }) =>
@@ -68,7 +69,7 @@ const DashboardLayout = () => {
               <CalendarCheck size={20} className="mr-3" />
               My Bookings
             </NavLink>
-            
+
             <NavLink
               to="/bookings/new"
               className={({ isActive }) =>
@@ -78,7 +79,7 @@ const DashboardLayout = () => {
               <Plus size={20} className="mr-3" />
               New Booking
             </NavLink>
-            
+
             <NavLink
               to="/profile"
               className={({ isActive }) =>
@@ -89,22 +90,18 @@ const DashboardLayout = () => {
               My Profile
             </NavLink>
           </nav>
-          
+
           {/* Sidebar footer */}
           <div className="px-4 py-4 border-t border-gray-200">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
-                  <span className="font-medium text-sm">{user?.name?.[0].toUpperCase()}</span>
-                </div>
+              <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
+                <span className="font-medium text-sm">
+                  {user?.name?.[0].toUpperCase()}
+                </span>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.name}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user?.email}
-                </p>
+                <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
             </div>
             <Button
@@ -119,9 +116,9 @@ const DashboardLayout = () => {
           </div>
         </div>
       </aside>
-      
-      {/* Main content */}
-      <div className="flex flex-col min-h-screen lg:ml-64 absolute inset-0">
+
+      {/* Main content area */}
+      <div className="flex flex-col min-h-screen lg:ml-64 absolute inset-0 overflow-hidden">
         {/* Header */}
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -132,21 +129,18 @@ const DashboardLayout = () => {
               >
                 <Menu size={24} className="text-gray-600" />
               </button>
-              
               <div className="ml-4 flex items-center md:ml-6">
-                <div className="hidden md:block font-medium">
-                  {user?.name}
-                </div>
+                <div className="hidden md:block font-medium">{user?.name}</div>
               </div>
             </div>
           </div>
         </header>
-        
-        {/* Page content */}
+
+        {/* Page outlet (renders current route's content) */}
         <main className="flex-grow p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
-        
+
         {/* Footer */}
         <footer className="bg-white border-t border-gray-200">
           <div className="px-4 py-4 sm:px-6 lg:px-8">
