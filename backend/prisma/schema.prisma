@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum SlotType {
+  VIP
+  REGULAR 
+}
+
+enum PlanType {
+  FREE
+  MONTHLY
+  YEARLY
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  plateNumber String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings  Booking[]
+  payments  Payment[]
+}
+
+model ParkingSlot {
+  id          String    @id @default(uuid())
+  slotNumber  String    @unique
+  type        SlotType  @default(REGULAR)
+  isAvailable Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  bookings    Booking[]
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  startTime    DateTime
+  endTime      DateTime
+  status       BookingStatus @default(PENDING)
+  isPaid       Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  expiresAt    DateTime? // for auto-expiring pending bookings
+
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  slotId       String
+  parkingSlot  ParkingSlot   @relation(fields: [slotId], references: [id])
+  payment      Payment?
+
+  @@index([userId])
+  @@index([slotId])
+  @@index([status])
+}
+
+model PaymentPlan {
+  id          String    @id @default(uuid())
+  name        String
+  type        PlanType
+  price       Float
+  duration    Int       // in days
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  payments    Payment[]
+}
+
+model Payment {
+  id            String         @id @default(uuid())
+  amount        Float
+  status        PaymentStatus  @default(PENDING)
+  transactionId String?        // external payment provider's transaction ID
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  bookingId     String         @unique
+  booking       Booking        @relation(fields: [bookingId], references: [id])
+  planId        String
+  plan          PaymentPlan    @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
