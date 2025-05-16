@@ -17,6 +17,9 @@ const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
+
 
 // User pages
 const UserDashboard = lazy(() => import('./pages/user/Dashboard'));
@@ -53,8 +56,11 @@ function App() {
 
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
-          <Route path="/login" element={<Login />} />
+          <Route path="/auth/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgotPassword" element={<ForgotPassword />} />
+          <Route path="/resetPassword" element={<ResetPassword />} />
+          
         </Route>
 
         {/* User Routes */}

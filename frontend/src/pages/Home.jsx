@@ -45,7 +45,7 @@ const Home = () => {
                 ) : (
                   <div className="space-y-4 sm:space-y-0 sm:space-x-4">
                     <Button
-                      to="/login"
+                      to="/auth/login"
                       variant="secondary"
                       size="lg"
                       className="sm:w-auto px-8 py-3"

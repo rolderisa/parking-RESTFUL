@@ -5,6 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import VerifyConfirmForm from '../../components/forms/auth/verifyConfirm';
+import API_ENDPOINTS from '../../constant/api';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -15,10 +19,11 @@ const Register = () => {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [email, setEmail] = useState(null); // removed TypeScript type
+
   const { register } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -26,33 +31,40 @@ const Register = () => {
       [name]: value
     });
   };
-  
+
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    
+
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    
+
     if (!formData.plateNumber) newErrors.plateNumber = 'Plate number is required';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       await register(formData);
-      navigate('/dashboard');
+      setEmail(formData.email); // go to verification step
+
+      // Send verification code
+      await axios.put(API_ENDPOINTS.auth.resetPasswordInitiate, {
+        email: formData.email,
+      });
+
+      toast.success('Verification code sent to your email');
     } catch (error) {
       console.error('Registration error:', error);
       if (error.response?.data?.message?.includes('already exists')) {
@@ -64,21 +76,30 @@ const Register = () => {
       setIsLoading(false);
     }
   };
-  
+
+  const handleVerifySuccess = () => {
+    navigate('/auth/login');
+  };
+
+  if (email) {
+    // show verify component
+    return <VerifyConfirmForm email={email} onVerifySuccess={handleVerifySuccess} />;
+  }
+
   return (
     <Card className="w-full p-8 shadow-md animate-fade-in">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Create an Account</h1>
         <p className="mt-2 text-gray-600">Register to start booking parking spaces</p>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {errors.general && (
           <div className="bg-error-50 border border-error-200 text-error-600 px-4 py-3 rounded">
             {errors.general}
           </div>
         )}
-        
+
         <Input
           label="Full Name"
           type="text"
@@ -89,7 +110,7 @@ const Register = () => {
           error={errors.name}
           required
         />
-        
+
         <Input
           label="Email Address"
           type="email"
@@ -100,7 +121,7 @@ const Register = () => {
           error={errors.email}
           required
         />
-        
+
         <Input
           label="Password"
           type="password"
@@ -111,7 +132,7 @@ const Register = () => {
           error={errors.password}
           required
         />
-        
+
         <Input
           label="License Plate Number"
           type="text"
@@ -122,7 +143,7 @@ const Register = () => {
           error={errors.plateNumber}
           required
         />
-        
+
         <Button
           type="submit"
           variant="primary"
@@ -134,7 +155,7 @@ const Register = () => {
           Create Account
         </Button>
       </form>
-      
+
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
           Already have an account?{' '}

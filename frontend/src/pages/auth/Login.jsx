@@ -39,6 +39,7 @@ const Login = () => {
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
+        
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -121,6 +122,9 @@ const Login = () => {
       </form>
       
       <div className="mt-6 text-center">
+         <a href="/forgotPassword" className="text-black hover:underline">
+          Forgot password?
+        </a>
         <p className="text-sm text-gray-600">
           Don't have an account?{' '}
           <Link to="/register" className="font-medium text-primary-955 hover:text-primary-955">

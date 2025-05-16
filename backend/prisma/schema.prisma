@@ -10,6 +10,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ========== ENUMS ==========
+
 enum Role {
   USER
   ADMIN
@@ -42,27 +44,47 @@ enum PlanType {
   YEARLY
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  plateNumber String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum VerificationStatus {
+  UNVERIFIED
+  VERIFIED
+}
 
-  bookings  Booking[]
-  payments  Payment[]
+enum PasswordResetStatus {
+  IDLE
+  REQUESTED
+  COMPLETED
+}
+
+// ========== MODELS ==========
+
+model User {
+  id                    String               @id @default(uuid())
+  email                 String               @unique
+  password              String
+  name                  String
+  plateNumber           String
+  role                  Role                 @default(USER)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  verificationStatus    VerificationStatus   @default(UNVERIFIED) @map("verification_status")
+  verificationCode      String?              @map("verification_code")
+  verificationExpires   DateTime?            @map("verification_expires")
+  passwordResetStatus   PasswordResetStatus  @default(IDLE) @map("password_reset_status")
+  passwordResetCode     String?              @map("password_reset_code")
+  passwordResetExpires  DateTime?            @map("password_reset_expires")
+
+  bookings              Booking[]
+  payments              Payment[]
 }
 
 model ParkingSlot {
-  id          String    @id @default(uuid())
-  slotNumber  String    @unique
-  type        SlotType  @default(REGULAR)
-  isAvailable Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id          String       @id @default(uuid())
+  slotNumber  String       @unique
+  type        SlotType     @default(REGULAR)
+  isAvailable Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   bookings    Booking[]
 }
@@ -75,7 +97,7 @@ model Booking {
   isPaid       Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  expiresAt    DateTime? // for auto-expiring pending bookings
+  expiresAt    DateTime?     // for auto-expiring pending bookings
 
   userId       String
   user         User          @relation(fields: [userId], references: [id])
@@ -89,32 +111,32 @@ model Booking {
 }
 
 model PaymentPlan {
-  id          String    @id @default(uuid())
+  id          String     @id @default(uuid())
   name        String
   type        PlanType
   price       Float
-  duration    Int       // in days
+  duration    Int        // in days
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   payments    Payment[]
 }
 
 model Payment {
-  id            String         @id @default(uuid())
+  id            String        @id @default(uuid())
   amount        Float
-  status        PaymentStatus  @default(PENDING)
-  transactionId String?        // external payment provider's transaction ID
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  status        PaymentStatus @default(PENDING)
+  transactionId String?       // external payment provider's transaction ID
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   userId        String
-  user          User           @relation(fields: [userId], references: [id])
-  bookingId     String         @unique
-  booking       Booking        @relation(fields: [bookingId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  bookingId     String        @unique
+  booking       Booking       @relation(fields: [bookingId], references: [id])
   planId        String
-  plan          PaymentPlan    @relation(fields: [planId], references: [id])
+  plan          PaymentPlan   @relation(fields: [planId], references: [id])
 
   @@index([userId])
   @@index([status])
