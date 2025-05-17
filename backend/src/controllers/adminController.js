@@ -2,6 +2,8 @@ import asyncHandler from 'express-async-handler';
 import { prisma } from '../index.js';
 import { bookingSearchSchema, userSearchSchema } from '../utils/validationSchemas.js';
 import { generateCSVReport } from '../utils/pdfGenerator.js';
+import { sendBookingStatusEmail } from '../utils/mail.js';
+
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/dashboard
@@ -289,33 +291,33 @@ export const exportBookings = asyncHandler(async (req, res) => {
 // @desc    Approve or reject a booking
 // @route   PUT /api/admin/bookings/:id/status
 // @access  Private/Admin
+
 export const updateBookingStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
-  
+
   if (!status || !['APPROVED', 'REJECTED'].includes(status)) {
     res.status(400);
     throw new Error('Please provide a valid status (APPROVED or REJECTED)');
   }
-  
+
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id },
     include: {
-      payment: true
+      payment: true,
+      user: true
     }
   });
-  
+
   if (!booking) {
     res.status(404);
     throw new Error('Booking not found');
   }
-  
-  // Only pending bookings can be approved/rejected
+
   if (booking.status !== 'PENDING') {
     res.status(400);
     throw new Error('Only pending bookings can be approved or rejected');
   }
-  
-  // Update booking status
+
   const updatedBooking = await prisma.booking.update({
     where: { id: req.params.id },
     data: { status },
@@ -336,6 +338,18 @@ export const updateBookingStatus = asyncHandler(async (req, res) => {
       }
     }
   });
-  
+
+ const { email, name } = updatedBooking.user;
+
+if (!email) {
+  console.warn(`User has no email: ${updatedBooking.user.id}`);
+} else {
+  const emailResult = await sendBookingStatusEmail(email, name, status);
+
+  if (!emailResult.status) {
+    console.warn('Booking status email failed to send:', emailResult.message);
+  }
+}
+
   res.status(200).json(updatedBooking);
 });

@@ -17,7 +17,8 @@ async function main() {
       password: hashedPassword,
       name: 'Irisa',
       plateNumber: 'RDAADMIN1',
-      role: 'ADMIN', // Capitalized to match enum if used
+      role: 'ADMIN', // Capitalized to match enum if 
+      verificationStatus: 'VERIFIED',
     },
   });
 

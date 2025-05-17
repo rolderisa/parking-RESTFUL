@@ -31,7 +31,7 @@ const sendAccountVerificationEmail = async (email, names, verificationToken) => 
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: email,
-      subject: 'NE NodeJS Account Verification',
+      subject: 'ParkLot Account Verification',
       html: `
         <!DOCTYPE html>
         <html>
@@ -41,7 +41,7 @@ const sendAccountVerificationEmail = async (email, names, verificationToken) => 
           <strong>Verification code: ${verificationToken}</strong> <br/> or
           <a href="${process.env.CLIENT_URL}/auth/verify-email/${verificationToken}" style="color:#4200FE;letter-spacing: 2px;">Click here</a>
           <span>The code expires in 6 hours</span>
-          <p>Best regards,<br>NE NodeJS</p>
+          <p>Best regards,<br>ParkLot</p>
         </body>
         </html>
       `,
@@ -65,7 +65,7 @@ const sendPaswordResetEmail = async (email, names, passwordResetToken) => {
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: email,
-      subject: 'NE NodeJS Password Reset',
+      subject: 'ParkLot Password Reset',
       html: `
         <!DOCTYPE html>
         <html>
@@ -75,7 +75,7 @@ const sendPaswordResetEmail = async (email, names, passwordResetToken) => {
           <strong>Reset code: ${passwordResetToken}</strong> <br/> or
           <a href="${process.env.CLIENT_URL}/auth/reset-password/${passwordResetToken}" style="color:#4200FE;letter-spacing: 2px;">Click here</a>
           <span>The code expires in 6 hours</span>
-          <p>Best regards,<br>NE NodeJS</p>
+          <p>Best regards,<br>ParkLot</p>
         </body>
         </html>
       `,
@@ -93,5 +93,80 @@ const sendPaswordResetEmail = async (email, names, passwordResetToken) => {
     };
   }
 };
+const sendBookingStatusEmail = async (email, names, status) => {
+  const subject =
+    status === 'APPROVED' ? 'Your booking has been approved' : 'Your booking has been rejected';
 
-export { sendAccountVerificationEmail, sendPaswordResetEmail };
+  const message =
+    status === 'APPROVED'
+      ? `Hi ${names},<br/><br/>Your booking request has been <strong>approved</strong>. You can now access your reserved parking slot.<br/><br/>Thanks for using ParkLot!`
+      : `Hi ${names},<br/><br/>We're sorry to inform you that your booking request has been <strong>rejected</strong>. If you have any questions, please contact support.<br/><br/>Best regards,<br/>ParkLot Team`;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.MAIL_USER,
+      to: email,
+      subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <body>
+          ${message}
+        </body>
+        </html>
+      `,
+    });
+
+    return {
+      message: 'Booking status email sent successfully',
+      status: true,
+    };
+  } catch (error) {
+    console.error('Error sending booking status email:', error);
+    return {
+      message: 'Unable to send booking status email',
+      status: false,
+    };
+  }
+};
+const sendNewBookingRequestEmail = async (adminEmail, user, parkingSlot) => {
+  const subject = '🚗 New Parking Slot Request';
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <body>
+      <h2>New Booking Request Received</h2>
+      <p><strong>User:</strong> ${user.name} (${user.email})</p>
+      <p><strong>Plate Number:</strong> ${user.plateNumber || 'N/A'}</p>
+      <p><strong>Requested Slot:</strong> ${parkingSlot.name || 'Unknown Slot'}</p>
+      <p>Please review and take action in the admin panel.</p>
+      <br>
+      <p>— ParkLot System</p>
+    </body>
+    </html>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.MAIL_USER,
+      to: adminEmail,
+      subject,
+      html: htmlContent,
+    });
+
+    return {
+      message: 'Admin notified of new booking',
+      status: true,
+    };
+  } catch (error) {
+    console.error('Error sending admin notification:', error);
+    return {
+      message: 'Failed to notify admin',
+      status: false,
+    };
+  }
+};
+
+
+export { sendAccountVerificationEmail, sendPaswordResetEmail,sendBookingStatusEmail,sendNewBookingRequestEmail };
