@@ -33,7 +33,8 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const user = await login(email, password);
+      const user = await login(email, password)
+      console.log(user)
       // Redirect based on user role
       if (user.role === 'ADMIN') {
         navigate('/admin/dashboard');

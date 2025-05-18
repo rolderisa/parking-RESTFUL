@@ -15,7 +15,7 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    plateNumber: ''
+    
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +42,7 @@ const Register = () => {
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
 
-    if (!formData.plateNumber) newErrors.plateNumber = 'Plate number is required';
+    
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -133,7 +133,7 @@ const Register = () => {
           required
         />
 
-        <Input
+        {/* <Input
           label="License Plate Number"
           type="text"
           name="plateNumber"
@@ -142,7 +142,7 @@ const Register = () => {
           onChange={handleChange}
           error={errors.plateNumber}
           required
-        />
+        /> */}
 
         <Button
           type="submit"
@@ -159,7 +159,7 @@ const Register = () => {
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-primary-955 hover:text-primary-955">
+          <Link to="/auth/login" className="font-medium text-primary-955 hover:text-primary-955">
             Sign in
           </Link>
         </p>

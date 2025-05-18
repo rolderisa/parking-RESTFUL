@@ -236,6 +236,16 @@ const BookingDetails = () => {
             </div>
             
             <div>
+              <p className="text-sm text-gray-500">Vehicle</p>
+              <div className="flex items-center mt-1">
+                <Car size={18} className="text-gray-500 mr-2" />
+                <p className="text-lg font-medium">
+                  {booking.vehicle?.plateNumber || 'N/A'}
+                </p>
+              </div>
+            </div>
+            
+            <div>
               <p className="text-sm text-gray-500">Duration</p>
               <p className="text-lg font-medium mt-1">
                 {calculateDuration(booking.startTime, booking.endTime)}

@@ -59,6 +59,15 @@ const DashboardLayout = () => {
               <Home size={20} className="mr-3" />
               Dashboard
             </NavLink>
+              <NavLink
+              to="/vehicles"
+              className={({ isActive }) =>
+                `menu-item ${isActive ? 'menu-item-active' : 'menu-item-inactive'}`
+              }
+            >
+              <Car size={20} className="mr-3" />
+              Vehicles
+            </NavLink>
 
             <NavLink
               to="/bookings"
@@ -118,7 +127,7 @@ const DashboardLayout = () => {
       </aside>
 
       {/* Main content area */}
-      <div className="flex flex-col min-h-screen lg:ml-64 absolute inset-0 overflow-hidden">
+      <div className="flex flex-col min-h-screen lg:ml-64 absolute inset-0 ">
         {/* Header */}
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">

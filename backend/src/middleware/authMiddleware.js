@@ -3,28 +3,29 @@ import asyncHandler from 'express-async-handler';
 import { prisma } from '../index.js';
 
 export const protect = asyncHandler(async (req, res, next) => {
-  let token;
-
-  // Get token from header
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
-  } 
-  // Get token from cookie
-  else if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-  }
-
-  // Check if token exists
-  if (!token) {
-    res.status(401);
-    throw new Error('Not authorized, no token');
-  }
-
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let token;
 
-    // Get user from the token
+    // Extract token from Authorization header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    // Or from cookies
+    else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+
+    // If no token, deny access
+    if (!token) {
+      res.status(401);
+      throw new Error('Not authorized, no token');
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded token payload:', decoded); // Debug: Log decoded payload
+
+    // Get the user from DB (only valid fields)
     req.user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: {
@@ -32,7 +33,8 @@ export const protect = asyncHandler(async (req, res, next) => {
         email: true,
         name: true,
         role: true,
-        plateNumber: true
+        createdAt: true,
+        updatedAt: true
       }
     });
 
@@ -41,8 +43,10 @@ export const protect = asyncHandler(async (req, res, next) => {
       throw new Error('Not authorized, user not found');
     }
 
+    console.log('Authenticated user:', req.user); // Debug: Log authenticated user
     next();
   } catch (error) {
+    console.error('Auth error:', error.message);
     res.status(401);
     throw new Error('Not authorized, token failed');
   }

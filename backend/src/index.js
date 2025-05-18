@@ -14,10 +14,13 @@ import parkingSlotRoutes from './routes/parkingSlotRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import vehicleRoutes from './routes/vehicleRoute.js';
+import '../cron.js';
 // import { swaggerSpec, swaggerUi } from '../swagger/doc/index.js';
+
 // Initialize
 dotenv.config();
-export const prisma = new PrismaClient();
+export const prisma = new PrismaClient(); // Ensure this export is present
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -34,63 +37,25 @@ app.use(cors({
 }));
 // Serve Swagger UI at /api-docs
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 // Routes
 app.use('/api/auth', authRoutes);
-    /*
-        #swagger.tags = ['Auth']
-        #swagger.security = [{
-                "bearerAuth": []
-        }] 
-    */
 app.use('/api/users', userRoutes);
-  /*
-        #swagger.tags = ['Users']
-        #swagger.security = [{
-                "bearerAuth": []
-        }] 
-    */
 app.use('/api/parking-slots', parkingSlotRoutes);
-  /*
-        #swagger.tags = ['parking-slots']
-        #swagger.security = [{
-                "bearerAuth": []
-        }] 
-    */
 app.use('/api/bookings', bookingRoutes);
-  /*
-        #swagger.tags = ['bookings']
-        #swagger.security = [{
-                "bearerAuth": []
-        }] 
-    */
 app.use('/api/payments', paymentRoutes);
-/*
-        #swagger.tags = ['payments']
-        #swagger.security = [{
-                "bearerAuth": []
-        }] 
-    */
 app.use('/api/admin', adminRoutes);
-/*
-        #swagger.tags = ['admin']
-        #swagger.security = [{
-                "bearerAuth": []
-        }] 
-    */
+app.use('/api/vehicles', vehicleRoutes);
 
 // Error handling
 app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} at ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
-  // Close server & exit process
-  // server.close(() => process.exit(1));
 });
-
-export default app;

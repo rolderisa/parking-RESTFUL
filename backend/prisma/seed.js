@@ -1,28 +1,26 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';  // lightweight, fast, secure
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = 'irisarolande25@gmail.com';
+  // Hash the password before inserting
+  const hashedPassword = await bcrypt.hash('Irisa@123', 10); // 10 salt rounds is industry standard
 
-  // Hash the password
-  const hashedPassword = await bcrypt.hash('Irisa@123', 10);
-
-  await prisma.user.upsert({
-    where: { email },
-    update: {}, // no update for now, just creates if not exists
+  const admin = await prisma.user.upsert({
+    where: { email: 'irisarolande25@gmail.com' },
+    update: {},
     create: {
-      email,
-      password: hashedPassword,
-      name: 'Irisa',
-      plateNumber: 'RDAADMIN1',
-      role: 'ADMIN', // Capitalized to match enum if 
+      email: 'irisarolande25@gmail.com',
+      name: 'ADMIN',
+      password: hashedPassword,  // hashed, not plain text
+      role: 'ADMIN',
       verificationStatus: 'VERIFIED',
     },
   });
 
-  console.log('✅ Admin user seeded');
+  console.log('✅ Seeding complete:', admin);
 }
 
 main()
@@ -30,6 +28,4 @@ main()
     console.error('❌ Seeding failed:', e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .finally(() => prisma.$disconnect());

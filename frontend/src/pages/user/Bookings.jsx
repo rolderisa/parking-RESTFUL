@@ -37,8 +37,8 @@ const Bookings = () => {
   try {
     const response = await api.get('/bookings', {
       params: {
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
+        page: pagination.page?.toString() || '1',
+        limit: pagination.limit?.toString() || '10',
         ...cleanFilters
       }
     });

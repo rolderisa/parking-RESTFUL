@@ -7,34 +7,47 @@ import { generateBookingPDF } from '../utils/pdfGenerator.js';
 // @route   POST /api/bookings
 // @access  Private
 export const createBooking = asyncHandler(async (req, res) => {
-  // Validate request data
+  console.log('createBooking req.body:', req.body);
   const validatedData = createBookingSchema.parse(req.body);
-  const { startTime, endTime, slotId, planId } = validatedData;
-  
-  // Parse dates
+  console.log('createBooking validatedData:', validatedData);
+
+  const { startTime, endTime, slotId, planId, vehicle } = validatedData;
+
+  if (!vehicle || !vehicle.connect || !vehicle.connect.id) {
+    res.status(400);
+    throw new Error('Vehicle is required with a valid connect.id');
+  }
+
+  if (!req.user || !req.user.id) {
+    res.status(401);
+    throw new Error('User not authenticated');
+  }
+
+  if (!slotId) {
+    res.status(400);
+    throw new Error('Parking slot ID is required');
+  }
+
   const start = new Date(startTime);
   const end = new Date(endTime);
-  
-  // Set expiration time for pending booking (2 hours from now)
+
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + 2);
-  
-  // Check if slot exists and is available
+
   const slot = await prisma.parkingSlot.findUnique({
     where: { id: slotId }
   });
-  
+
   if (!slot) {
     res.status(404);
     throw new Error('Parking slot not found');
   }
-  
+
   if (!slot.isAvailable) {
     res.status(400);
     throw new Error('Parking slot is not available');
   }
-  
-  // Check if the slot has conflicting bookings
+
   const conflictingBookings = await prisma.booking.findFirst({
     where: {
       slotId,
@@ -55,30 +68,56 @@ export const createBooking = asyncHandler(async (req, res) => {
       ]
     }
   });
-  
+
   if (conflictingBookings) {
     res.status(400);
     throw new Error('This slot is already booked for the selected time');
   }
-  
-  // Check if payment plan exists
+
   const plan = await prisma.paymentPlan.findUnique({
     where: { id: planId }
   });
-  
+
   if (!plan) {
     res.status(404);
     throw new Error('Payment plan not found');
   }
-  
-  // Create booking
+
+  console.log('Payment plan price:', plan.price);
+
+  if (plan.type !== 'FREE' && plan.price <= 0) {
+    res.status(400);
+    throw new Error('Payment plan price must be greater than 0 for non-free plans');
+  }
+
+  const vehicleRecord = await prisma.vehicle.findUnique({
+    where: { id: vehicle.connect.id }
+  });
+
+  if (!vehicleRecord) {
+    res.status(404);
+    throw new Error('Vehicle not found');
+  }
+
+  if (vehicleRecord.userId !== req.user.id) {
+    res.status(403);
+    throw new Error('Not authorized to book with this vehicle');
+  }
+
   const booking = await prisma.booking.create({
     data: {
       startTime: start,
       endTime: end,
       expiresAt,
-      userId: req.user.id,
-      slotId,
+      user: {
+        connect: { id: req.user.id }
+      },
+      parkingSlot: {
+        connect: { id: slotId }
+      },
+      vehicle: {
+        connect: { id: vehicle.connect.id }
+      },
       payment: {
         create: {
           amount: plan.price,
@@ -101,10 +140,16 @@ export const createBooking = asyncHandler(async (req, res) => {
         include: {
           plan: true
         }
+      },
+      vehicle: {
+        select: {
+          id: true,
+          plateNumber: true
+        }
       }
     }
   });
-  
+
   res.status(201).json(booking);
 });
 
@@ -112,18 +157,14 @@ export const createBooking = asyncHandler(async (req, res) => {
 // @route   GET /api/bookings
 // @access  Private
 export const getUserBookings = asyncHandler(async (req, res) => {
-  // Validate query parameters
   const { page, limit, status } = bookingSearchSchema.parse(req.query);
   const skip = (page - 1) * limit;
-  
-  // Build where clause
+
   const where = { userId: req.user.id };
   if (status) where.status = status;
-  
-  // Get total count
+
   const totalCount = await prisma.booking.count({ where });
-  
-  // Get bookings
+
   const bookings = await prisma.booking.findMany({
     where,
     include: {
@@ -131,6 +172,12 @@ export const getUserBookings = asyncHandler(async (req, res) => {
       payment: {
         include: {
           plan: true
+        }
+      },
+      vehicle: {
+        select: {
+          id: true,
+          plateNumber: true
         }
       }
     },
@@ -140,7 +187,7 @@ export const getUserBookings = asyncHandler(async (req, res) => {
     skip,
     take: limit
   });
-  
+
   res.status(200).json({
     bookings,
     page,
@@ -170,62 +217,64 @@ export const getBookingById = asyncHandler(async (req, res) => {
         include: {
           plan: true
         }
+      },
+      vehicle: {
+        select: {
+          id: true,
+          plateNumber: true
+        }
       }
     }
   });
-  
+
   if (!booking) {
     res.status(404);
     throw new Error('Booking not found');
   }
-  
-  // Check if user owns the booking or is admin
+
   if (booking.userId !== req.user.id && req.user.role !== 'ADMIN') {
     res.status(403);
     throw new Error('Not authorized to access this booking');
   }
-  
+
   res.status(200).json(booking);
 });
 
-// @desc    Update booking status (cancel for users)
+// @desc    Update booking status (cancel for users, approve/reject for admins)
 // @route   PUT /api/bookings/:id
 // @access  Private
 export const updateBooking = asyncHandler(async (req, res) => {
-  // Validate request data
   const validatedData = updateBookingSchema.parse(req.body);
-  
+
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id },
     include: {
       payment: true
     }
   });
-  
+
   if (!booking) {
     res.status(404);
     throw new Error('Booking not found');
   }
-  
-  // Users can only cancel their own bookings that are in PENDING state
+
   if (req.user.role !== 'ADMIN') {
     if (booking.userId !== req.user.id) {
       res.status(403);
       throw new Error('Not authorized to update this booking');
     }
-    
+
     if (validatedData.status && validatedData.status !== 'CANCELLED') {
       res.status(403);
       throw new Error('Users can only cancel bookings');
     }
-    
+
     if (booking.status !== 'PENDING') {
       res.status(400);
       throw new Error('Only pending bookings can be cancelled');
     }
   }
-  
-  // Update booking
+
   const updatedBooking = await prisma.booking.update({
     where: { id: req.params.id },
     data: validatedData,
@@ -243,20 +292,81 @@ export const updateBooking = asyncHandler(async (req, res) => {
         include: {
           plan: true
         }
+      },
+      vehicle: {
+        select: {
+          id: true,
+          plateNumber: true
+        }
       }
     }
   });
-  
-  // If booking is cancelled/rejected and there's a payment, mark it as REFUNDED
-  if ((updatedBooking.status === 'CANCELLED' || updatedBooking.status === 'REJECTED') && 
-      updatedBooking.payment && 
+
+  if ((updatedBooking.status === 'CANCELLED' || updatedBooking.status === 'REJECTED') &&
+      updatedBooking.payment &&
       updatedBooking.payment.status === 'PAID') {
     await prisma.payment.update({
       where: { id: updatedBooking.payment.id },
       data: { status: 'REFUNDED' }
     });
   }
-  
+
+  res.status(200).json(updatedBooking);
+});
+
+// @desc    Mark a booking as completed (user exits the slot)
+// @route   PUT /api/bookings/:id/exit
+// @access  Private
+export const completeBooking = asyncHandler(async (req, res) => {
+  const bookingId = req.params.id;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { parkingSlot: true }
+  });
+
+  if (!booking) {
+    res.status(404);
+    throw new Error('Booking not found');
+  }
+
+  if (booking.userId !== req.user.id) {
+    res.status(403);
+    throw new Error('Not authorized to modify this booking');
+  }
+
+  if (booking.status !== 'APPROVED') {
+    res.status(400);
+    throw new Error('Only approved bookings can be marked as completed');
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: 'COMPLETED' },
+    include: {
+      parkingSlot: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          plateNumber: true
+        }
+      },
+      payment: {
+        include: {
+          plan: true
+        }
+      },
+      vehicle: {
+        select: {
+          id: true,
+          plateNumber: true
+        }
+      }
+    }
+  });
+
   res.status(200).json(updatedBooking);
 });
 
@@ -280,22 +390,26 @@ export const downloadBookingAsPDF = asyncHandler(async (req, res) => {
         include: {
           plan: true
         }
+      },
+      vehicle: {
+        select: {
+          id: true,
+          plateNumber: true
+        }
       }
     }
   });
-  
+
   if (!booking) {
     res.status(404);
     throw new Error('Booking not found');
   }
-  
-  // Check if user owns the booking or is admin
+
   if (booking.userId !== req.user.id && req.user.role !== 'ADMIN') {
     res.status(403);
     throw new Error('Not authorized to access this booking');
   }
-  
-  // Generate PDF
+
   generateBookingPDF(booking, res);
 });
 
@@ -309,38 +423,34 @@ export const completeBookingPayment = asyncHandler(async (req, res) => {
       payment: true
     }
   });
-  
+
   if (!booking) {
     res.status(404);
     throw new Error('Booking not found');
   }
-  
-  // Check if user owns the booking
+
   if (booking.userId !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to pay for this booking');
   }
-  
-  // Check if booking is in an appropriate state
+
   if (booking.status !== 'APPROVED') {
     res.status(400);
     throw new Error('Can only pay for approved bookings');
   }
-  
-  // Check if already paid
+
   if (booking.isPaid) {
     res.status(400);
     throw new Error('Booking is already paid');
   }
-  
-  // Update payment and booking status
+
   if (booking.payment) {
     await prisma.payment.update({
       where: { id: booking.payment.id },
       data: { status: 'PAID' }
     });
   }
-  
+
   const updatedBooking = await prisma.booking.update({
     where: { id: req.params.id },
     data: { isPaid: true },
@@ -350,9 +460,15 @@ export const completeBookingPayment = asyncHandler(async (req, res) => {
         include: {
           plan: true
         }
+      },
+      vehicle: {
+        select: {
+          id: true,
+          plateNumber: true
+        }
       }
     }
   });
-  
+
   res.status(200).json(updatedBooking);
 });

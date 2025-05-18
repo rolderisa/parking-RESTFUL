@@ -27,6 +27,10 @@ const BookingForm = lazy(() => import('./pages/user/BookingForm'));
 const UserBookings = lazy(() => import('./pages/user/Bookings'));
 const BookingDetails = lazy(() => import('./pages/user/BookingDetails'));
 const UserProfile = lazy(() => import('./pages/user/Profile'));
+const Vehicles = lazy(() => import('./pages/user/vehicles'));
+const AddVehicleForm = lazy(() => import('./pages/user/AddVehicleForm')); 
+const EditVehicleForm = lazy(() => import('./pages/user/EditVehicleForm'));
+const VehicleDetails = lazy(() => import('./pages/user/VehicleDetails'));
 
 // Admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -71,6 +75,11 @@ function App() {
             <Route path="/bookings/new" element={<BookingForm />} />
             <Route path="/bookings/:id" element={<BookingDetails />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/vehicles/:id" element={<VehicleDetails />} />
+            <Route path="/vehicles/add" element={<AddVehicleForm />} />
+            <Route path="/vehicles/edit/:id" element={<EditVehicleForm />} />
+
           </Route>
         </Route>
 

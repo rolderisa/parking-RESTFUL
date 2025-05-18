@@ -5,7 +5,7 @@ const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const api = axios.create({
   baseURL,
   withCredentials: true,
-  headers: {
+  headers: { 
     'Content-Type': 'application/json',
   },
 });
@@ -14,6 +14,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log(token)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,29 +26,29 @@ api.interceptors.request.use(
 );
 
 // Add a response interceptor to handle token expiration
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
+// api.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   async (error) => {
+//     const originalRequest = error.config;
     
-    // If the error is 401 and we haven't attempted to refresh the token yet
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+//     // If the error is 401 and we haven't attempted to refresh the token yet
+//     if (error.response.status === 401 && !originalRequest._retry) {
+//       originalRequest._retry = true;
       
-      // Clear the auth state if token is invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+//       // Clear the auth state if token is invalid
+//       localStorage.removeItem('token');
+//       localStorage.removeItem('user');
       
-      // Redirect to login page
-      window.location.href = '/login';
+//       // Redirect to login page
+//       window.location.href = 'auth/login';
       
-      return Promise.reject(error);
-    }
+//       return Promise.reject(error);
+//     }
     
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 export default api;

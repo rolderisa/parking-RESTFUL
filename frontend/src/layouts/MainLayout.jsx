@@ -38,7 +38,7 @@ const MainLayout = () => {
               ) : (
                 <div className="flex space-x-2">
                   <Button 
-                    to="/login"
+                    to="/auth/login"
                     variant="secondary"
                     icon={<LogIn size={16} />}
                   >
@@ -91,7 +91,7 @@ const MainLayout = () => {
               ) : (
                 <>
                   <Link
-                    to="/login"
+                    to="/auth/login"
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-100"
                     onClick={() => setIsMenuOpen(false)}
                   >

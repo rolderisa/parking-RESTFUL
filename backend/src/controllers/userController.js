@@ -14,7 +14,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
       id: true,
       name: true,
       email: true,
-      plateNumber: true,
+      // plateNumber: true,
       role: true,
       createdAt: true,
       updatedAt: true
@@ -43,14 +43,14 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   }
   
   // Validate request data
-  const { name, email, plateNumber, password } = req.body;
+  const { name, email, password } = req.body;
   
   // Prepare update data
   const updateData = {};
   
   if (name) updateData.name = name;
   if (email) updateData.email = email;
-  if (plateNumber) updateData.plateNumber = plateNumber;
+  // if (plateNumber) updateData.plateNumber = plateNumber;
   
   // Hash password if provided
   if (password) {
@@ -66,7 +66,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       id: true,
       name: true,
       email: true,
-      plateNumber: true,
+      // plateNumber: true,
       role: true,
       createdAt: true,
       updatedAt: true
@@ -127,7 +127,7 @@ export const downloadUserProfile = asyncHandler(async (req, res) => {
       id: true,
       name: true,
       email: true,
-      plateNumber: true,
+      // plateNumber: true,
       role: true,
       createdAt: true,
       updatedAt: true
