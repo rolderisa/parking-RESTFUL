@@ -33,17 +33,46 @@ const sendAccountVerificationEmail = async (email, names, verificationToken) => 
       to: email,
       subject: 'ParkLot Account Verification',
       html: `
-        <!DOCTYPE html>
-        <html>
-        <body>
-          <h2>Dear ${names},</h2>
-          <h2>To verify your account, click the link below or use the code below</h2>
-          <strong>Verification code: ${verificationToken}</strong> <br/> or
-          <a href="${process.env.CLIENT_URL}/auth/verify-email/${verificationToken}" style="color:#4200FE;letter-spacing: 2px;">Click here</a>
-          <span>The code expires in 6 hours</span>
-          <p>Best regards,<br>ParkLot</p>
-        </body>
-        </html>
+      <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Email Verification</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+    <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+      <div style="text-align: center; padding: 20px; background-color: #f0f0ff;">
+        <img src="https://parkenterpriseconstruction.com/site/wp-content/uploads/2020/07/image4.jpg" alt="ParkLot Logo" style="max-width: 100%; height: auto; border-bottom: 2px solid #ccc;" />
+      </div>
+
+      <div style="padding: 30px; color: #333;">
+        <h2 style="margin-top: 0;">Dear ${names},</h2>
+        <p style="font-size: 16px;">
+          To verify your account, click the link below or use the verification code provided.
+        </p>
+
+        <p style="font-size: 18px; font-weight: bold; letter-spacing: 2px; color: #4200FE;">
+          Verification Code: ${verificationToken}
+        </p>
+
+        <p style="font-size: 16px;">
+          or 
+          <a href="${process.env.CLIENT_URL}/auth/verify-email/${verificationToken}" style="color:#4200FE; text-decoration: none; font-weight: bold;">
+            Click here
+          </a>
+        </p>
+
+        <p style="color: #888; font-size: 14px;">The code expires in 6 hours.</p>
+
+        <p style="margin-top: 40px; font-size: 16px;">
+          Best regards,<br />
+          <strong>ParkLot</strong>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+
       `,
     });
 
@@ -67,17 +96,46 @@ const sendPaswordResetEmail = async (email, names, passwordResetToken) => {
       to: email,
       subject: 'ParkLot Password Reset',
       html: `
-        <!DOCTYPE html>
-        <html>
-        <body>
-          <h2>Dear ${names},</h2>
-          <h2>Click the link below to change your password or use the code below</h2>
-          <strong>Reset code: ${passwordResetToken}</strong> <br/> or
-          <a href="${process.env.CLIENT_URL}/auth/reset-password/${passwordResetToken}" style="color:#4200FE;letter-spacing: 2px;">Click here</a>
-          <span>The code expires in 6 hours</span>
-          <p>Best regards,<br>ParkLot</p>
-        </body>
-        </html>
+       <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Password Reset</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+    <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+      <div style="text-align: center; padding: 20px; background-color: #f0f0ff;">
+        <img src="https://parkenterpriseconstruction.com/site/wp-content/uploads/2020/07/image4.jpg" alt="ParkLot Logo" style="max-width: 100%; height: auto; border-bottom: 2px solid #ccc;" />
+      </div>
+
+      <div style="padding: 30px; color: #333;">
+        <h2 style="margin-top: 0;">Dear ${names},</h2>
+        <p style="font-size: 16px;">
+          Click the link below to reset your password or use the reset code provided.
+        </p>
+
+        <p style="font-size: 18px; font-weight: bold; letter-spacing: 2px; color: #4200FE;">
+          Reset Code: ${passwordResetToken}
+        </p>
+
+        <p style="font-size: 16px;">
+          or
+          <a href="${process.env.CLIENT_URL}/auth/reset-password/${passwordResetToken}" style="color:#4200FE; text-decoration: none; font-weight: bold; margin-left: 5px;">
+            Click here
+          </a>
+        </p>
+
+        <p style="color: #888; font-size: 14px;">The code expires in 6 hours.</p>
+
+        <p style="margin-top: 40px; font-size: 16px;">
+          Best regards,<br />
+          <strong>ParkLot</strong>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
+
       `,
     });
 
