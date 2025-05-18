@@ -27,11 +27,11 @@ const VehicleDetails = () => {
       <h2 className="text-2xl font-bold mb-4">Vehicle Details</h2>
 
       <div className="mb-2">
-        <strong>Plate Number:</strong> {vehicle.plate_number}
+        <strong>Plate Number:</strong> {vehicle.plateNumber}
       </div>
 
       <div className="mb-2">
-        <strong>Type:</strong> {vehicle.vehicle_type}
+        <strong>Type:</strong> {vehicle.type}
       </div>
 
       <div className="mb-2">

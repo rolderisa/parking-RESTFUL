@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Filter, Search, Eye, Trash2, Pencil } from 'lucide-react';
+import { Plus, Filter, Search, Eye, Trash2, Pencil, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Table from '../../components/ui/Table';
 
@@ -49,6 +50,10 @@ const Vehicles = () => {
         totalPages,
         totalCount,
       });
+
+      if (vehicles.length === 0 && Object.keys(cleanFilters).length > 0) {
+        toast('No vehicles match your search criteria', { icon: '🔍' });
+      }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('Failed to load vehicles');
@@ -58,7 +63,11 @@ const Vehicles = () => {
   };
 
   useEffect(() => {
-    fetchVehicles();
+    const debounce = setTimeout(() => {
+      fetchVehicles();
+    }, 300);
+
+    return () => clearTimeout(debounce);
   }, [pagination.page, filters]);
 
   const handlePageChange = (page) => {
@@ -77,13 +86,16 @@ const Vehicles = () => {
   };
 
   const handleDelete = async (plateNumber) => {
-    try {
-      await api.delete(`/vehicles/${plateNumber}`);
-      toast.success('Vehicle deleted successfully');
-      fetchVehicles();
-    } catch (error) {
-      console.error('Error deleting vehicle:', error);
-      toast.error('Failed to delete vehicle');
+    if (window.confirm('Are you sure you want to delete this vehicle?')) {
+      console.log('Deleting vehicle with plateNumber:', plateNumber); // Debug log
+      try {
+        await api.delete(`/vehicles/plate/${plateNumber}`);
+        toast.success('Vehicle deleted successfully');
+        fetchVehicles();
+      } catch (error) {
+        console.error('Error deleting vehicle:', error);
+        toast.error(error.response?.data?.message || 'Failed to delete vehicle. Please check the plate number or try again.');
+      }
     }
   };
 
@@ -171,10 +183,40 @@ const Vehicles = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+      {/* Search and Filter Section */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1 max-w-md">
+            <Input
+              label="Search by Plate Number"
+              name="plateNumber"
+              value={filters.plateNumber}
+              onChange={handleFilterChange}
+              placeholder="Enter plate number..."
+              icon={<Search size={16} />}
+            />
+          </div>
+          <Select
+            label="Filter by Vehicle Type"
+            name="type"
+            value={filters.type}
+            onChange={handleFilterChange}
+            options={[
+              { value: '', label: 'All Types' },
+              { value: 'CAR', label: 'Car' },
+              { value: 'MOTORCYCLE', label: 'Motorcycle' },
+              { value: 'TRUCK', label: 'Truck' },
+            ]}
+            className="w-40"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            icon={<RefreshCw size={16} />}
+          >
+            Clear Filters
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -184,59 +226,19 @@ const Vehicles = () => {
             {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
           </Button>
         </div>
+      </div>
 
-        {isFilterOpen && (
+      {/* Additional Filters (if any) */}
+      {isFilterOpen && (
+        <Card className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Vehicle Type Filter */}
-            <Select
-              label="Vehicle Type"
-              name="type"
-              value={filters.type}
-              onChange={handleFilterChange}
-              options={[
-                { value: '', label: 'All Types' },
-                { value: 'CAR', label: 'Car' },
-                { value: 'MOTORCYCLE', label: 'Motorcycle' },
-                { value: 'TRUCK', label: 'Truck' },
-              ]}
-            />
-
-           
-
-            {/* Filter Buttons */}
-            <div className="md:col-span-3 flex justify-end space-x-2 mt-4">
-              <Button variant="secondary" size="sm" onClick={clearFilters}>
-                Clear Filters
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={fetchVehicles}
-                icon={<Search size={16} />}
-              >
-                Apply Filters
-              </Button>
-            </div>
+            <div className="md:col-span-3 flex justify-end space-x-2 mt-4" />
           </div>
-        )}
-      </Card>
-       {/* Plate Number Search */}
-            <div className='mb-4'>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Plate Number
-              </label>
-              <input
-                type="text"
-                name="plateNumber"
-                value={filters.plateNumber}
-                onChange={handleFilterChange}
-                placeholder="Search by Plate Number"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
+        </Card>
+      )}
 
       {/* Vehicles Table */}
-      <Card className="mb-6 ">
+      <Card className="mb-6">
         <Table
           columns={columns}
           data={vehicles}

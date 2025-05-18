@@ -34,7 +34,7 @@ const Home = () => {
           {isAuthenticated ? (
             <Button
               to={dashboardUrl}
-              variant="primary"
+              variant="secondary"
               size="lg"
               className="bg-white text-primary-700 hover:bg-gray-100 px-8 py-3"
             >

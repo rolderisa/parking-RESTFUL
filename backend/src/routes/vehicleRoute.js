@@ -21,6 +21,6 @@ router.get('/', getUserVehicles);
 router.get('/:id', getVehicleById); // Parameterized route after static routes
 router.post('/', createVehicle);
 router.put('/plate/:plateNumber', updateVehicle);
-router.delete('/:id', deleteVehicle);
+router.delete('/plate/:plateNumber', deleteVehicle);
 
 export default router;

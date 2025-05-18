@@ -11,7 +11,7 @@ export const getUserVehicles = asyncHandler(async (req, res) => {
   
   const where = { userId: req.user.id };
   if (type) where.type = type;
-  if (plateNumber) where.plateNumber = { contains: plateNumber };
+  if (plateNumber) where.plateNumber = { contains: plateNumber, mode: 'insensitive' };
   
   const totalCount = await prisma.vehicle.count({ where });
   
@@ -58,7 +58,7 @@ export const getVehicleById = asyncHandler(async (req, res) => {
 // @route   GET /api/vehicles/all
 // @access  Private
 export const getAllVehiclesForSelection = asyncHandler(async (req, res) => {
-  console.log('Authenticated user ID:', req.user?.id); // Debug: Log the user ID
+  console.log('Authenticated user ID:', req.user?.id);
   if (!req.user?.id) {
     res.status(401);
     throw new Error('User not authenticated');
@@ -71,7 +71,7 @@ export const getAllVehiclesForSelection = asyncHandler(async (req, res) => {
     include: { _count: { select: { bookings: true } } }
   });
   
-  console.log('Fetched vehicles:', vehicles); // Debug: Log the fetched vehicles
+  console.log('Fetched vehicles:', vehicles);
   
   res.status(200).json({ vehicles, message: vehicles.length === 0 ? 'No vehicles found' : undefined });
 });
@@ -160,54 +160,71 @@ export const updateVehicle = asyncHandler(async (req, res) => {
   res.status(200).json(updatedVehicle);
 });
 
-// @desc    Delete vehicle
-// @route   DELETE /api/vehicles/:id
+// @desc    Delete vehicle by plate number
+// @route   DELETE /api/vehicles/plate/:plateNumber
 // @access  Private
+
+
 export const deleteVehicle = asyncHandler(async (req, res) => {
+  const { plateNumber } = req.params;
+
+  console.log('User ID:', req.user.id); // Debug log
+  console.log('Requested plateNumber:', plateNumber); // Debug log
+
+  if (!plateNumber) {
+    res.status(400);
+    throw new Error('Plate number is required');
+  }
+
   const vehicle = await prisma.vehicle.findUnique({
-    where: { id: req.params.id },
+    where: { plateNumber },
     include: { bookings: { where: { status: { in: ['PENDING', 'APPROVED'] } } } }
   });
-  
+
   if (!vehicle) {
     res.status(404);
     throw new Error('Vehicle not found');
   }
-  
+
   if (vehicle.userId !== req.user.id) {
     res.status(403);
     throw new Error('Not authorized to delete this vehicle');
   }
-  
+
   if (vehicle.bookings.length > 0) {
     res.status(400);
     throw new Error('Cannot delete vehicle with active bookings');
   }
-  
-  await prisma.vehicle.delete({ where: { id: req.params.id } });
-  
+
+  await prisma.vehicle.delete({ where: { plateNumber } });
+
   await prisma.log.create({
     data: {
       userId: req.user.id,
       action: 'DELETE_VEHICLE',
-      details: { vehicleId: req.params.id, plateNumber: vehicle.plateNumber }
+      details: { vehicleId: vehicle.id, plateNumber: vehicle.plateNumber }
     }
   });
-  
+
   res.status(200).json({ message: 'Vehicle deleted successfully' });
 });
 
+// ... (other functions remain unchanged)
 // @desc    Get vehicle by plate number
 // @route   GET /api/vehicles/plate/:plateNumber
 // @access  Private
 export const getVehicleByPlateNumber = asyncHandler(async (req, res) => {
   const plateNumber = req.params.plateNumber.toUpperCase();
-  
+
   const vehicle = await prisma.vehicle.findFirst({ where: { plateNumber } });
-  
+
   if (!vehicle) {
     return res.status(404).json({ message: 'Vehicle not found' });
   }
-  
+
+  if (vehicle.userId !== req.user.id) {
+    return res.status(403).json({ message: 'Not authorized to access this vehicle' });
+  }
+
   res.status(200).json(vehicle);
 });
