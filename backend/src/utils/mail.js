@@ -216,8 +216,57 @@ const sendBookingStatusEmail = async (email, names, status) => {
     };
   }
 };
+const sendSlotRequestNotificationToAdmin = async (adminEmail, userName, slotDetails) => {
+  try {
+    const mailOptions = {
+      from: process.env.MAIL_USER,
+      to: adminEmail, // Can be a string or array
+      subject: 'New Parking Slot Request Notification',
+      html: `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <title>New Booking Request</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+            <div style="text-align: center; padding: 20px; background-color: #f0f0ff;">
+              <img src="https://parkenterpriseconstruction.com/site/wp-content/uploads/2020/07/image4.jpg" alt="ParkLot Logo" style="max-width: 100%; height: auto; border-bottom: 2px solid #ccc;" />
+            </div>
+            <div style="padding: 30px; color: #333;">
+              <h2>New Slot Booking Request</h2>
+              <p><strong>User:</strong> ${userName}</p>
+              <p><strong>Requested Slot:</strong> ${slotDetails.slotName}</p>
+              <p><strong>Type:</strong> ${slotDetails.slotType}</p>
+              <p><strong>License Plate:</strong> ${slotDetails.plateNumber}</p>
+              <p><strong>Plan:</strong> ${slotDetails.paymentPlan}</p>
+
+              <p style="margin-top: 30px;">Please log into the dashboard to review and approve the request.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Admin notification email sent:', info.messageId);
+
+    return {
+      message: 'Admin notification email sent successfully',
+      status: true,
+    };
+  } catch (error) {
+    console.error('Error sending slot request email to admin:', error);
+    throw new Error('Unable to notify admin');
+  }
+};
+
+
 export {
   sendAccountVerificationEmail,
   sendPaswordResetEmail,
   sendBookingStatusEmail,
+  sendSlotRequestNotificationToAdmin,
 };

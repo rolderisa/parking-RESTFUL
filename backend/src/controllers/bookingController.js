@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import { prisma } from '../index.js';
 import { bookingSearchSchema, createBookingSchema, updateBookingSchema } from '../utils/validationSchemas.js';
 import { generateBookingPDF } from '../utils/pdfGenerator.js';
+import {sendSlotRequestNotificationToAdmin} from '../utils/mail.js';
 
 // @desc    Create a new booking
 // @route   POST /api/bookings
@@ -149,6 +150,37 @@ export const createBooking = asyncHandler(async (req, res) => {
       }
     }
   });
+
+  // Fetch admin emails
+  const admins = await prisma.user.findMany({
+    where: { role: 'ADMIN' },
+    select: { email: true }
+  });
+
+  const adminEmails = admins.map(admin => admin.email);
+  if (adminEmails.length === 0) {
+    console.warn('No admin emails found to notify');
+  } else {
+    console.log('Notifying admins:', adminEmails);
+  }
+
+  // Format slot details for the email
+  const slotDetails = {
+    slotName: booking.parkingSlot.slotNumber,
+    slotType: booking.parkingSlot.type,
+    plateNumber: booking.vehicle.plateNumber,
+    paymentPlan: booking.payment.plan.name
+  };
+
+  // Notify admin
+  try {
+    const emailResult = await sendSlotRequestNotificationToAdmin(adminEmails, booking.user.name, slotDetails);
+    console.log('Admin notification result:', emailResult);
+  } catch (error) {
+    console.error('Failed to send admin notification:', error);
+    // Optionally, you can decide to throw an error or continue
+    // res.status(500).json({ message: 'Booking created, but failed to notify admin', booking });
+  }
 
   res.status(201).json(booking);
 });
