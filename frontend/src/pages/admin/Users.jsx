@@ -27,72 +27,71 @@ const Users = () => {
   
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
- const fetchUsers = async () => {
-  setLoading(true);
-
-  // Clean out empty filters
   const cleanFilters = Object.fromEntries(
     Object.entries(filters).filter(([_, v]) => v !== '')
   );
 
-  try {
-    const response = await api.get('/admin/users', {
-      params: {
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...cleanFilters
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/admin/users', {
+        params: {
+          page: pagination.page.toString(),
+          limit: pagination.limit.toString(),
+          ...cleanFilters
+        }
+      });
+
+      const { users, page, limit, totalPages, totalCount } = response.data;
+
+      setUsers(users);
+      setPagination({
+        page: Number(page),
+        limit: Number(limit),
+        totalPages,
+        totalCount
+      });
+
+      if (users.length === 0 && Object.keys(cleanFilters).length > 0) {
+        toast('No users match your search criteria', { icon: '🔍' });
       }
-    });
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const { users, page, limit, totalPages, totalCount } = response.data;
-
-    setUsers(users);
-    setPagination({
-      page: Number(page),
-      limit: Number(limit),
-      totalPages,
-      totalCount
-    });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    toast.error('Failed to load users');
-  } finally {
-    setLoading(false);
-  }
-};
-
-  
   useEffect(() => {
-    fetchUsers();
-  }, [pagination.page]);
-  
+    const debounce = setTimeout(() => {
+      fetchUsers();
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [pagination.page, filters]);
+
   const handlePageChange = (page) => {
     setPagination(prev => ({ ...prev, page }));
   };
-  
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const applyFilters = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchUsers();
   };
-  
+
   const clearFilters = () => {
     setFilters({ name: '', email: '', plateNumber: '', role: '' });
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchUsers();
   };
-  
+
   const exportUsers = async () => {
     try {
       const response = await api.get('/admin/users/export', {
         responseType: 'blob'
       });
       
-      // Create a blob link to download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -100,7 +99,6 @@ const Users = () => {
       document.body.appendChild(link);
       link.click();
       
-      // Clean up and remove the link
       link.parentNode.removeChild(link);
       
       toast.success('Users exported successfully');
@@ -109,11 +107,11 @@ const Users = () => {
       toast.error('Failed to export users');
     }
   };
-  
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
-  
+
   const columns = [
     {
       header: 'Name',
@@ -149,7 +147,7 @@ const Users = () => {
       cell: (row) => formatDate(row.createdAt),
     },
   ];
-  
+
   return (
     <div className="animate-fade-in">
       <div className="flex flex-wrap items-center justify-between mb-6">
@@ -167,11 +165,38 @@ const Users = () => {
           </Button>
         </div>
       </div>
-      
-      {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+
+      {/* Search Section */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1 max-w-md">
+            <Input
+              label="Search by Name"
+              name="name"
+              value={filters.name}
+              onChange={handleFilterChange}
+              placeholder="Enter user name..."
+              icon={<Search size={16} />}
+            />
+          </div>
+          <div className="flex-1 max-w-md">
+            <Input
+              label="Search by Email"
+              name="email"
+              value={filters.email}
+              onChange={handleFilterChange}
+              placeholder="Enter user email..."
+              icon={<Search size={16} />}
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            icon={<RefreshCw size={16} />}
+          >
+            Clear Filters
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -181,25 +206,12 @@ const Users = () => {
             {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
           </Button>
         </div>
-        
-        {isFilterOpen && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Input
-              label="Name"
-              name="name"
-              value={filters.name}
-              onChange={handleFilterChange}
-              placeholder="Search by name"
-            />
-            
-            <Input
-              label="Email"
-              name="email"
-              value={filters.email}
-              onChange={handleFilterChange}
-              placeholder="Search by email"
-            />
-            
+      </div>
+
+      {/* Additional Filters */}
+      {isFilterOpen && (
+        <Card className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input
               label="Plate Number"
               name="plateNumber"
@@ -207,7 +219,6 @@ const Users = () => {
               onChange={handleFilterChange}
               placeholder="Search by plate"
             />
-            
             <Select
               label="Role"
               name="role"
@@ -219,28 +230,11 @@ const Users = () => {
                 { value: 'ADMIN', label: 'Admin' }
               ]}
             />
-            
-            <div className="md:col-span-4 flex justify-end space-x-2 mt-4">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={applyFilters}
-                icon={<Search size={16} />}
-              >
-                Apply Filters
-              </Button>
-            </div>
+            <div className="md:col-span-3 flex justify-end space-x-2 mt-4" />
           </div>
-        )}
-      </Card>
-      
+        </Card>
+      )}
+
       {/* Users Table */}
       <Card className="mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -254,7 +248,7 @@ const Users = () => {
             Refresh
           </Button>
         </div>
-        
+
         <Table
           columns={columns}
           data={users}
