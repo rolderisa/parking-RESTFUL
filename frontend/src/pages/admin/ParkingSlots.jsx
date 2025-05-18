@@ -66,6 +66,10 @@ const ParkingSlots = () => {
         totalPages,
         totalCount,
       }));
+
+      if (slots.length === 0) {
+        toast('No parking slots match your search criteria', { icon: '🔍' });
+      }
     } catch (error) {
       console.error('Error fetching parking slots:', error);
       toast.error('Failed to load parking slots');
@@ -75,7 +79,11 @@ const ParkingSlots = () => {
   };
 
   useEffect(() => {
-    fetchSlots();
+    const debounce = setTimeout(() => {
+      fetchSlots();
+    }, 300);
+
+    return () => clearTimeout(debounce);
   }, [pagination.page, filters]);
 
   const handlePageChange = (page) => {
@@ -85,11 +93,7 @@ const ParkingSlots = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const applyFilters = () => {
     setPagination((prev) => ({ ...prev, page: 1 }));
-    fetchSlots();
   };
 
   const clearFilters = () => {
@@ -101,7 +105,6 @@ const ParkingSlots = () => {
       vehicleType: '',
     });
     setPagination((prev) => ({ ...prev, page: 1 }));
-    fetchSlots();
   };
 
   const handleFormChange = (e) => {
@@ -120,9 +123,8 @@ const ParkingSlots = () => {
     }
     const dataToSend = {
       ...slotForm,
-      location: slotForm.location || undefined, // Send undefined if location is empty
+      location: slotForm.location || undefined,
     };
-    console.log('Sending slotForm:', dataToSend); // Debug
     try {
       await api.post('/parking-slots', dataToSend);
       toast.success('Parking slot added successfully');
@@ -173,7 +175,7 @@ const ParkingSlots = () => {
     }
     const dataToSend = {
       ...slotForm,
-      location: slotForm.location || undefined, // Send undefined if location is empty
+      location: slotForm.location || undefined,
     };
     try {
       await api.put(`/parking-slots/${id}`, dataToSend);
@@ -470,10 +472,19 @@ const ParkingSlots = () => {
         </Card>
       )}
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Filters</h2>
+      {/* Search Bar for Slot Number */}
+      <div className="mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="flex-1 max-w-md">
+            <Input
+              label="Search by Slot Number"
+              name="slotNumber"
+              value={filters.slotNumber}
+              onChange={handleFilterChange}
+              placeholder="Enter slot number..."
+              icon={<Search size={16} />}
+            />
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -483,14 +494,12 @@ const ParkingSlots = () => {
             {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
           </Button>
         </div>
-        {isFilterOpen && (
+      </div>
+
+      {/* Additional Filters */}
+      {isFilterOpen && (
+        <Card className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Input
-              label="Slot Number"
-              name="slotNumber"
-              value={filters.slotNumber}
-              onChange={handleFilterChange}
-            />
             <Select
               label="Slot Type"
               name="type"
@@ -546,18 +555,10 @@ const ParkingSlots = () => {
               >
                 Clear
               </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={applyFilters}
-                icon={<Search size={16} />}
-              >
-                Apply
-              </Button>
             </div>
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {/* Table */}
       <Card>
