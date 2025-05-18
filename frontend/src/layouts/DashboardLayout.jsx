@@ -17,7 +17,7 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       {/* Mobile sidebar backdrop */}
       {isSidebarOpen && (
         <div
@@ -59,7 +59,7 @@ const DashboardLayout = () => {
               <Home size={20} className="mr-3" />
               Dashboard
             </NavLink>
-              <NavLink
+            <NavLink
               to="/vehicles"
               className={({ isActive }) =>
                 `menu-item ${isActive ? 'menu-item-active' : 'menu-item-inactive'}`
@@ -68,7 +68,6 @@ const DashboardLayout = () => {
               <Car size={20} className="mr-3" />
               Vehicles
             </NavLink>
-
             <NavLink
               to="/bookings"
               className={({ isActive }) =>
@@ -78,7 +77,6 @@ const DashboardLayout = () => {
               <CalendarCheck size={20} className="mr-3" />
               My Bookings
             </NavLink>
-
             <NavLink
               to="/bookings/new"
               className={({ isActive }) =>
@@ -88,7 +86,6 @@ const DashboardLayout = () => {
               <Plus size={20} className="mr-3" />
               New Booking
             </NavLink>
-
             <NavLink
               to="/profile"
               className={({ isActive }) =>
@@ -127,7 +124,7 @@ const DashboardLayout = () => {
       </aside>
 
       {/* Main content area */}
-      <div className="flex flex-col min-h-screen lg:ml-64 absolute inset-0 ">
+      <div className="flex flex-col flex-1 min-h-screen overflow-hidden">
         {/* Header */}
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8">
@@ -138,15 +135,13 @@ const DashboardLayout = () => {
               >
                 <Menu size={24} className="text-gray-600" />
               </button>
-              <div className="ml-4 flex items-center md:ml-6">
-                <div className="hidden md:block font-medium">{user?.name}</div>
-              </div>
+              
             </div>
           </div>
         </header>
 
         {/* Page outlet (renders current route's content) */}
-        <main className="flex-grow p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <Outlet />
         </main>
 
@@ -154,7 +149,7 @@ const DashboardLayout = () => {
         <footer className="bg-white border-t border-gray-200">
           <div className="px-4 py-4 sm:px-6 lg:px-8">
             <p className="text-sm text-gray-500 text-center">
-              &copy; {new Date().getFullYear()} ParkEase. All rights reserved.
+              © {new Date().getFullYear()} ParkEase. All rights reserved.
             </p>
           </div>
         </footer>

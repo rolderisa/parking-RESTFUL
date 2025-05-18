@@ -153,26 +153,55 @@ const sendPaswordResetEmail = async (email, names, passwordResetToken) => {
 };
 const sendBookingStatusEmail = async (email, names, status) => {
   const subject =
-    status === 'APPROVED' ? 'Your booking has been approved' : 'Your booking has been rejected';
-
-  const message =
     status === 'APPROVED'
-      ? `Hi ${names},<br/><br/>Your booking request has been <strong>approved</strong>. You can now access your reserved parking slot.<br/><br/>Thanks for using ParkLot!`
-      : `Hi ${names},<br/><br/>We're sorry to inform you that your booking request has been <strong>rejected</strong>. If you have any questions, please contact support.<br/><br/>Best regards,<br/>ParkLot Team`;
+      ? 'Your booking has been approved'
+      : 'Your booking has been rejected';
+
+  const htmlMessage = `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Booking Status</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+        <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
+          <div style="text-align: center; padding: 20px; background-color: #f0f0ff;">
+            <img src="https://parkenterpriseconstruction.com/site/wp-content/uploads/2020/07/image4.jpg" alt="ParkLot Logo" style="max-width: 100%; height: auto; border-bottom: 2px solid #ccc;" />
+          </div>
+          <div style="padding: 30px; color: #333;">
+            <h2 style="margin-top: 0;">Hi ${names},</h2>
+            ${
+              status === 'APPROVED'
+                ? `<p style="font-size: 16px;">
+                    Your booking request has been <strong style="color: green;">approved</strong>. 
+                    You can now access your reserved parking slot.
+                  </p>`
+                : `<p style="font-size: 16px;">
+                    We're sorry to inform you that your booking request has been 
+                    <strong style="color: red;">rejected</strong>. 
+                    If you have any questions, please contact support.
+                  </p>`
+            }
+            <p style="margin-top: 40px; font-size: 16px;">
+              ${
+                status === 'APPROVED'
+                  ? 'Thanks for using ParkLot!'
+                  : 'Best regards,<br/><strong>ParkLot Team</strong>'
+              }
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
 
   try {
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: email,
       subject,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <body>
-          ${message}
-        </body>
-        </html>
-      `,
+      html: htmlMessage,
     });
 
     return {
@@ -187,44 +216,8 @@ const sendBookingStatusEmail = async (email, names, status) => {
     };
   }
 };
-const sendNewBookingRequestEmail = async (adminEmail, user, parkingSlot) => {
-  const subject = '🚗 New Parking Slot Request';
-
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <body>
-      <h2>New Booking Request Received</h2>
-      <p><strong>User:</strong> ${user.name} (${user.email})</p>
-      <p><strong>Plate Number:</strong> ${user.plateNumber || 'N/A'}</p>
-      <p><strong>Requested Slot:</strong> ${parkingSlot.name || 'Unknown Slot'}</p>
-      <p>Please review and take action in the admin panel.</p>
-      <br>
-      <p>— ParkLot System</p>
-    </body>
-    </html>
-  `;
-
-  try {
-    await transporter.sendMail({
-      from: process.env.MAIL_USER,
-      to: adminEmail,
-      subject,
-      html: htmlContent,
-    });
-
-    return {
-      message: 'Admin notified of new booking',
-      status: true,
-    };
-  } catch (error) {
-    console.error('Error sending admin notification:', error);
-    return {
-      message: 'Failed to notify admin',
-      status: false,
-    };
-  }
+export {
+  sendAccountVerificationEmail,
+  sendPaswordResetEmail,
+  sendBookingStatusEmail,
 };
-
-
-export { sendAccountVerificationEmail, sendPaswordResetEmail,sendBookingStatusEmail,sendNewBookingRequestEmail };
