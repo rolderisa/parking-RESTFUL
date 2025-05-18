@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Calendar, Clock, Car, CreditCard, AlertTriangle, 
-  CheckCircle, Trash2, Download, ArrowLeft
+  CheckCircle, Trash2, Download, ArrowLeft, LogOut
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
@@ -22,6 +22,7 @@ const BookingDetails = () => {
       try {
         const response = await api.get(`/bookings/${id}`);
         setBooking(response.data);
+        console.log('Fetched booking:', response.data); // Debug log
       } catch (error) {
         console.error('Error fetching booking details:', error);
         toast.error('Failed to load booking details');
@@ -86,6 +87,20 @@ const BookingDetails = () => {
     }
   };
   
+  const handleExitSlot = async () => {
+    try {
+      await api.put(`/bookings/${id}/exit`);
+      toast.success('Successfully exited the slot');
+      
+      // Refresh booking data
+      const response = await api.get(`/bookings/${id}`);
+      setBooking(response.data);
+    } catch (error) {
+      console.error('Error exiting slot:', error);
+      toast.error('Failed to exit slot');
+    }
+  };
+  
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
   };
@@ -125,6 +140,9 @@ const BookingDetails = () => {
     }
   };
   
+  // Adjusted canExitSlot to allow exit during APPROVED status, not just after endTime
+  const canExitSlot = booking && booking.status === 'APPROVED';
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -174,6 +192,16 @@ const BookingDetails = () => {
               onClick={handleCancel}
             >
               Cancel Booking
+            </Button>
+          )}
+          
+          {canExitSlot && (
+            <Button
+              variant="danger"
+              icon={<LogOut size={16} />}
+              onClick={handleExitSlot}
+            >
+              Exit Slot
             </Button>
           )}
           
