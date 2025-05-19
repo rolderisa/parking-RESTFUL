@@ -613,36 +613,48 @@ export const approveBooking = asyncHandler(async (req, res) => {
     });
     return;
   }
+// Calculate time difference (in hours)
+const start = new Date(updatedBooking.startTime);
+const end = new Date(updatedBooking.endTime);
+const durationInHours = Math.ceil((end - start) / (1000 * 60 * 60)); // Round up to charge per full hour
+const hourlyRate = 2000; // in RWF
+const totalAmount = durationInHours * hourlyRate;
 
-  // Send email with PDF
-  const mailOptions = {
-    from: process.env.MAIL_USER,
-    to: updatedBooking.user.email,
-    subject: "Your Parking Ticket",
-    html: `
-      <h2>Your Parking Booking</h2>
-      <p>Dear ${updatedBooking.user.name},</p>
-      <p>Your booking has been approved. Please find your ticket attached.</p>
-      <p><strong>Details:</strong></p>
-      <ul>
-        <li>Plate Number: ${updatedBooking.vehicle.plateNumber}</li>
-        <li>Parking Slot: ${updatedBooking.parkingSlot.slotNumber}</li>
-        <li>Start Time: ${new Date(
-          updatedBooking.startTime
-        ).toLocaleString()}</li>
-        <li>End Time: ${new Date(updatedBooking.endTime).toLocaleString()}</li>
-        <li>Amount: $${updatedBooking.payment.amount.toFixed(2)}</li>
-      </ul>
-      <p>Best regards,<br>Parking Management Team</p>
-    `,
-    attachments: [
-      {
-        filename: `ticket-${updatedBooking.id}.pdf`,
-        content: pdfBuffer,
-        contentType: "application/pdf",
-      },
-    ],
-  };
+// Format the amount in RWF
+const formattedAmount = totalAmount.toLocaleString('en-RW', {
+  style: 'currency',
+  currency: 'RWF',
+  minimumFractionDigits: 0,
+});
+
+// Send email with PDF
+const mailOptions = {
+  from: process.env.MAIL_USER,
+  to: updatedBooking.user.email,
+  subject: "Your Parking Ticket",
+  html: `
+    <h2>Your Parking Booking</h2>
+    <p>Dear ${updatedBooking.user.name},</p>
+    <p>Your booking has been approved. Please find your ticket attached.</p>
+    <p><strong>Details:</strong></p>
+    <ul>
+      <li>Plate Number: ${updatedBooking.vehicle.plateNumber}</li>
+      <li>Parking Slot: ${updatedBooking.parkingSlot.slotNumber}</li>
+      <li>Start Time: ${start.toLocaleString()}</li>
+      <li>End Time: ${end.toLocaleString()}</li>
+      <li>Duration: ${durationInHours} hour(s)</li>
+      <li>Amount: ${formattedAmount}</li>
+    </ul>
+    <p>Best regards,<br>Parking Management Team</p>
+  `,
+  attachments: [
+    {
+      filename: `ticket-${updatedBooking.id}.pdf`,
+      content: pdfBuffer,
+      contentType: "application/pdf",
+    },
+  ],
+}; 
 
   try {
     const transporter = nodemailer.createTransport({
