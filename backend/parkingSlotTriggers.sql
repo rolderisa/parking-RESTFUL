@@ -64,3 +64,42 @@ SELECT cron.schedule(
       AND "endTime" IS NOT NULL;
     $$
 );
+
+
+# CREATE OR REPLACE FUNCTION mark_parking_slot_available()
+# RETURNS TRIGGER AS $$
+# BEGIN
+#   IF NEW.status IN ('REJECTED', 'CANCELLED') AND OLD.status IS DISTINCT FROM NEW.status THEN
+#     UPDATE "ParkingSlot"
+#     SET "isAvailable" = true,
+#         "updatedAt" = NOW()
+#     WHERE id = NEW."slotId";
+#   END IF;
+#   RETURN NEW;
+# END;
+# $$ LANGUAGE plpgsql;
+
+# CREATE TRIGGER trg_mark_parking_slot_available
+# AFTER UPDATE ON "Booking"
+# FOR EACH ROW
+# EXECUTE FUNCTION mark_parking_slot_available();
+
+
+#  CREATE OR REPLACE FUNCTION mark_parking_slot_unavailable()
+#  RETURNS TRIGGER AS $$
+#  BEGIN
+#  IF NEW.status = 'APPROVED' AND OLD.status IS DISTINCT FROM NEW.status THEN
+#  UPDATE "ParkingSlot"
+#      SET "isAvailable" = false,
+#          "updatedAt" = NOW()
+#      WHERE id = NEW."slotId";
+#    END IF;
+#   RETURN NEW;
+#  END;
+#  $$ LANGUAGE plpgsql;
+# CREATE FUNCTION
+#  CREATE TRIGGER trg_mark_parking_slot_unavailable
+#  AFTER UPDATE ON "Booking"
+#  FOR EACH ROW
+#  EXECUTE FUNCTION mark_parking_slot_unavailable();
+# CREATE TRIGGER
