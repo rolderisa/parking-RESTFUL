@@ -57,6 +57,7 @@ const AdminLayout = () => {
               { to: '/admin/bookings', label: 'Bookings', icon: <CalendarCheck size={20} className="mr-3" /> },
               { to: '/admin/parking-slots', label: 'Parking Slots', icon: <Car size={20} className="mr-3" /> },
               { to: '/admin/payment-plans', label: 'Payment Plans', icon: <CreditCard size={20} className="mr-3" /> },
+              { to: '/admin/logstable', label: 'Logs Show', icon: <CreditCard size={20} className="mr-3" /> },
             ].map(({ to, label, icon }) => (
               <NavLink
                 key={to}

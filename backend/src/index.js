@@ -15,6 +15,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import vehicleRoutes from './routes/vehicleRoute.js';
+import logRoutes from './routes/logRoutes.js';
 import '../cron.js';
 // import { swaggerSpec, swaggerUi } from '../swagger/doc/index.js';
 
@@ -46,6 +47,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/logs', logRoutes);
 
 // Error handling
 app.use(errorHandler);

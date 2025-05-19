@@ -11,6 +11,7 @@ import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import AdminLayout from './layouts/AdminLayout';
+import LogsTable from './pages/admin/LogsTable';
 
 // Public pages
 const Home = lazy(() => import('./pages/Home'));
@@ -93,6 +94,7 @@ function App() {
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/parking-slots" element={<AdminParkingSlots />} />
             <Route path="/admin/payment-plans" element={<AdminPaymentPlans />} />
+            <Route path="/admin/logstable" element={<LogsTable />} />
           </Route>
         </Route>
 
