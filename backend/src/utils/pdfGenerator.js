@@ -1,75 +1,40 @@
 import PDFDocument from 'pdfkit';
 
-export const generateBookingPDF = (booking, res) => {
+export const generateBookingPDF = (booking, output) => {
   const doc = new PDFDocument();
-  
-  // Set response headers
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename=booking-${booking.id}.pdf`);
-  
-  // Pipe PDF to response
-  doc.pipe(res);
-  
-  // Add content to PDF
-  doc.fontSize(25).text('Parking Booking Details', {
-    align: 'center'
-  });
-  
-  doc.moveTo(50, 100).lineTo(550, 100).stroke();
-  
-  doc.moveDown();
-  doc.fontSize(14);
-  
-  // Booking details
-  doc.text(`Booking ID: ${booking.id}`);
-  doc.moveDown(0.5);
-  doc.text(`Status: ${booking.status}`);
-  doc.moveDown(0.5);
-  doc.text(`Slot Number: ${booking.parkingSlot.slotNumber}`);
-  doc.moveDown(0.5);
-  doc.text(`Slot Type: ${booking.parkingSlot.type}`);
-  doc.moveDown(0.5);
-  
-  // Format dates
-  const startDate = new Date(booking.startTime).toLocaleString();
-  const endDate = new Date(booking.endTime).toLocaleString();
-  
-  doc.text(`Start Time: ${startDate}`);
-  doc.moveDown(0.5);
-  doc.text(`End Time: ${endDate}`);
-  doc.moveDown(0.5);
-  
-  // Payment details if available
-  if (booking.payment) {
-    doc.moveDown();
-    doc.fontSize(16).text('Payment Information');
-    doc.moveDown(0.5);
-    doc.fontSize(14);
-    doc.text(`Payment Status: ${booking.payment.status}`);
-    doc.moveDown(0.5);
-    doc.text(`Amount Paid: $${booking.payment.amount.toFixed(2)}`);
-    doc.moveDown(0.5);
-    doc.text(`Payment Plan: ${booking.payment.plan.name}`);
+
+  // Handle output: stream to response or collect buffer
+  const buffers = [];
+  if (typeof output.setHeader === 'function') {
+    // Streaming for download
+    output.setHeader('Content-Type', 'application/pdf');
+    output.setHeader('Content-Disposition', `attachment; filename=booking-${booking.id}.pdf`);
+    doc.pipe(output);
+  } else {
+    // Buffer for email
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', () => output.end(Buffer.concat(buffers)));
+    doc.on('error', output.on.bind(output, 'error'));
   }
-  
-  // User details
+
+  // Add content to PDF
+  doc.fontSize(20).text('Parking Ticket', { align: 'center' });
   doc.moveDown();
-  doc.fontSize(16).text('User Information');
-  doc.moveDown(0.5);
+  doc.moveTo(50, 100).lineTo(550, 100).stroke();
+  doc.moveDown();
+
   doc.fontSize(14);
-  doc.text(`Name: ${booking.user.name}`);
+  doc.text(`Plate Number: ${booking.vehicle.plateNumber}`);
   doc.moveDown(0.5);
-  doc.text(`Email: ${booking.user.email}`);
+  doc.text(`Start Time: ${new Date(booking.startTime).toLocaleString()}`);
   doc.moveDown(0.5);
-  doc.text(`Plate Number: ${booking.user.plateNumber}`);
-  
-  // Footer
+  doc.text(`End Time: ${new Date(booking.endTime).toLocaleString()}`);
+  doc.moveDown(0.5);
+  doc.text(`Amount to Pay: $${booking.payment.amount.toFixed(2)}`);
+
   doc.moveDown(2);
-  doc.fontSize(10).text('This is an automatically generated document.', {
-    align: 'center'
-  });
-  
-  // Finalize PDF
+  doc.fontSize(10).text('This is an automatically generated document.', { align: 'center' });
+
   doc.end();
 };
 
@@ -84,9 +49,7 @@ export const generateUserPDF = (user, bookings, res) => {
   doc.pipe(res);
   
   // Add content to PDF
-  doc.fontSize(25).text('User Profile', {
-    align: 'center'
-  });
+  doc.fontSize(25).text('User Profile', { align: 'center' });
   
   doc.moveTo(50, 100).lineTo(550, 100).stroke();
   
@@ -107,9 +70,7 @@ export const generateUserPDF = (user, bookings, res) => {
   // Booking history
   if (bookings.length > 0) {
     doc.moveDown();
-    doc.fontSize(16).text('Booking History', {
-      align: 'center'
-    });
+    doc.fontSize(16).text('Booking History', { align: 'center' });
     doc.moveDown(0.5);
     
     bookings.forEach((booking, index) => {
@@ -125,16 +86,12 @@ export const generateUserPDF = (user, bookings, res) => {
     });
   } else {
     doc.moveDown();
-    doc.text('No booking history available.', {
-      align: 'center'
-    });
+    doc.text('No booking history available.', { align: 'center' });
   }
   
   // Footer
   doc.moveDown(2);
-  doc.fontSize(10).text('This is an automatically generated document.', {
-    align: 'center'
-  });
+  doc.fontSize(10).text('This is an automatically generated document.', { align: 'center' });
   
   // Finalize PDF
   doc.end();

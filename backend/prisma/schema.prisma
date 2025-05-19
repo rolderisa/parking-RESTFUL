@@ -187,3 +187,4 @@ model Log {
   @@index([action])
   @@index([createdAt])
 }
+

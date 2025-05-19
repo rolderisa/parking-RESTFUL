@@ -35,7 +35,7 @@ const VehicleDetails = lazy(() => import('./pages/user/VehicleDetails'));
 // Admin pages
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
-const AdminBookings = lazy(() => import('./pages/admin/Bookings'));
+const AdminBookings = lazy(() => import('./pages/admin/AdminBookings'));
 const AdminParkingSlots = lazy(() => import('./pages/admin/ParkingSlots'));
 const AdminPaymentPlans = lazy(() => import('./pages/admin/PaymentPlans'));
 
@@ -89,6 +89,7 @@ function App() {
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            {/* <Route path="/admin/bookings" element={<AdminBookings />} /> */}
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/parking-slots" element={<AdminParkingSlots />} />
             <Route path="/admin/payment-plans" element={<AdminPaymentPlans />} />
